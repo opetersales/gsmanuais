@@ -129,38 +129,6 @@
     font-weight: 300;
     max-width: 560px;
   }
-  .search-wrap {
-    width: 100%;
-    max-width: 540px;
-    position: relative;
-    margin-top: 8px;
-  }
-  .search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray-400); width: 18px; height: 18px; }
-  #searchInput {
-    width: 100%;
-    padding: 14px 20px 14px 46px;
-    border-radius: var(--radius);
-    border: 2px solid rgba(255,255,255,.15);
-    background: rgba(255,255,255,.1);
-    backdrop-filter: blur(12px);
-    color: var(--white);
-    font-family: var(--font-body);
-    font-size: 15px;
-    outline: none;
-    transition: var(--transition);
-  }
-  #searchInput::placeholder { color: rgba(255,255,255,.5); }
-  #searchInput:focus { border-color: var(--accent); background: rgba(255,255,255,.15); box-shadow: 0 0 0 4px rgba(245,158,11,.2); }
-  .header-stats {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding-top: 8px;
-  }
-  .header-stat { text-align: center; }
-  .header-stat .num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--accent); }
-  .header-stat .lbl { font-size: 12px; color: var(--blue-300); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
 
   /* ===================== NAV TABS ===================== */
   .nav-tabs-wrap {
@@ -302,7 +270,6 @@
     transition: box-shadow var(--transition);
   }
   .acc-card:hover { box-shadow: var(--shadow-lg); }
-  .acc-card.hidden-card { display: none; }
 
   .acc-header {
     display: flex;
@@ -500,18 +467,6 @@
   }
   footer strong { color: var(--gray-300); }
 
-  /* ===================== NO RESULTS ===================== */
-  #noResults {
-    display: none;
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--gray-500);
-  }
-  #noResults svg { width: 48px; height: 48px; color: var(--gray-300); margin: 0 auto 16px; }
-  #noResults h3 { font-size: 1.1rem; color: var(--gray-700); margin-bottom: 6px; }
-
-  /* ===================== HIGHLIGHT ===================== */
-  .highlight-text { background: #fef08a; border-radius: 2px; }
 
   /* ===================== MOBILE ===================== */
   @media (max-width: 640px) {
@@ -522,7 +477,6 @@
       line-height: 1.05;
       word-break: break-word;
     }
-    .header-stats { gap: 20px; }
     .cards-grid { grid-template-columns: 1fr; }
   }
 
@@ -536,9 +490,6 @@
   /* ===================== SECTION BG ALTERNATES ===================== */
   #multas { background: var(--white); }
 
-  /* Search result state */
-  .search-active section:not(.always-show) { padding-top: 0; }
-  .search-active .section-header { margin-bottom: 20px; }
 </style>
 </head>
 <body>
@@ -552,15 +503,6 @@
     </div>
     <h1 class="header-title">Treinamento <span>&amp; Procedimentos</span><br>DETRAN</h1>
     <p class="header-subtitle">Manual interativo para a equipe administrativa — consulte qualquer função do portal DETRAN com passo a passo completo.</p>
-    <div class="search-wrap">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.15 6.15a7.5 7.5 0 0 0 10.5 10.5Z"/></svg>
-      <input type="text" id="searchInput" placeholder="Buscar função ou procedimento…" autocomplete="off">
-    </div>
-    <div class="header-stats">
-      <div class="header-stat"><div class="num">6</div><div class="lbl">Categorias</div></div>
-      <div class="header-stat"><div class="num">18</div><div class="lbl">Funções</div></div>
-      <div class="header-stat"><div class="num">100%</div><div class="lbl">Atualizado</div></div>
-    </div>
   </div>
 </header>
 
@@ -586,12 +528,6 @@
   </div>
 </nav>
 
-<!-- ======================== NO RESULTS ======================== -->
-<div id="noResults">
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.15 6.15a7.5 7.5 0 0 0 10.5 10.5Z"/></svg>
-  <h3>Nenhum resultado encontrado</h3>
-  <p>Tente outro termo de busca.</p>
-</div>
 
 <!-- ======================== VISÃO GERAL ======================== -->
 <section id="visao" data-section>
@@ -1052,62 +988,7 @@
     });
   }
 
-  // ---- SEARCH ----
-  const searchInput = document.getElementById('searchInput');
-  const noResults   = document.getElementById('noResults');
-  const allCards    = document.querySelectorAll('.acc-card');
-  const allSections = document.querySelectorAll('[data-section]');
 
-  function normalizeText(value) {
-    return (value || '')
-      .toString()
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  if (searchInput) {
-    searchInput.addEventListener('input', function() {
-      const q = normalizeText(this.value);
-
-      document.body.classList.toggle('search-active', Boolean(q));
-
-      if (!q) {
-        allCards.forEach(c => { c.classList.remove('hidden-card'); });
-        allSections.forEach(s => s.style.display = '');
-        if (noResults) noResults.style.display = 'none';
-        return;
-      }
-
-      let anyVisible = false;
-      allCards.forEach(card => {
-        const kw = normalizeText(card.dataset.keywords || '');
-        const titleEl = card.querySelector('.acc-title');
-        const descEl = card.querySelector('.acc-desc');
-        const bodyEl = card.querySelector('.acc-body');
-        const title = normalizeText(titleEl ? titleEl.textContent : '');
-        const desc = normalizeText(descEl ? descEl.textContent : '');
-        const body = normalizeText(bodyEl ? bodyEl.textContent : '');
-        const match = kw.includes(q) || title.includes(q) || desc.includes(q) || body.includes(q);
-        card.classList.toggle('hidden-card', !match);
-        if (match) {
-          anyVisible = true;
-          card.classList.add('open');
-        }
-      });
-
-      allSections.forEach(section => {
-        const visCards = section.querySelectorAll('.acc-card:not(.hidden-card)');
-        if (section.querySelectorAll('.acc-card').length > 0) {
-          section.style.display = visCards.length === 0 ? 'none' : '';
-        }
-      });
-
-      if (noResults) noResults.style.display = anyVisible ? 'none' : 'block';
-    });
-  }
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const navWrap = document.querySelector('.nav-tabs-wrap');
@@ -1211,3 +1092,4 @@
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
