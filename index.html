@@ -517,6 +517,11 @@
   @media (max-width: 640px) {
     section { padding: 44px 0; }
     .header-inner { padding: 40px 20px 36px; }
+    .header-title {
+      font-size: clamp(1.65rem, 7.2vw, 2.35rem);
+      line-height: 1.05;
+      word-break: break-word;
+    }
     .header-stats { gap: 20px; }
     .cards-grid { grid-template-columns: 1fr; }
   }
@@ -1486,7 +1491,15 @@
   // ---- ACCORDION ----
   function toggleCard(header) {
     const card = header.closest('.acc-card');
+    if (!card) return;
     const isOpen = card.classList.contains('open');
+    if (!isOpen) {
+      const section = card.closest('[data-section]');
+      const scope = section || document;
+      scope.querySelectorAll('.acc-card.open').forEach(other => {
+        if (other !== card) other.classList.remove('open');
+      });
+    }
     card.classList.toggle('open', !isOpen);
   }
 
