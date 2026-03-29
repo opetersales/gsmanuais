@@ -1508,40 +1508,56 @@
   const allCards    = document.querySelectorAll('.acc-card');
   const allSections = document.querySelectorAll('[data-section]');
 
-  searchInput.addEventListener('input', function() {
-    const q = this.value.trim().toLowerCase();
+  function normalizeText(value) {
+    return (value || '')
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 
-    if (!q) {
-      allCards.forEach(c => { c.classList.remove('hidden-card'); });
-      allSections.forEach(s => s.style.display = '');
-      noResults.style.display = 'none';
-      return;
-    }
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const q = normalizeText(this.value);
 
-    let anyVisible = false;
-    allCards.forEach(card => {
-      const kw    = (card.dataset.keywords || '').toLowerCase();
-      const title = card.querySelector('.acc-title')?.textContent.toLowerCase() || '';
-      const desc  = card.querySelector('.acc-desc')?.textContent.toLowerCase() || '';
-      const body  = card.querySelector('.acc-body')?.textContent.toLowerCase() || '';
-      const match = kw.includes(q) || title.includes(q) || desc.includes(q) || body.includes(q);
-      card.classList.toggle('hidden-card', !match);
-      if (match) {
-        anyVisible = true;
-        card.classList.add('open');
+      document.body.classList.toggle('search-active', Boolean(q));
+
+      if (!q) {
+        allCards.forEach(c => { c.classList.remove('hidden-card'); });
+        allSections.forEach(s => s.style.display = '');
+        if (noResults) noResults.style.display = 'none';
+        return;
       }
-    });
 
-    // Hide sections with no visible cards
-    allSections.forEach(section => {
-      const visCards = section.querySelectorAll('.acc-card:not(.hidden-card)');
-      if (section.querySelectorAll('.acc-card').length > 0) {
-        section.style.display = visCards.length === 0 ? 'none' : '';
-      }
-    });
+      let anyVisible = false;
+      allCards.forEach(card => {
+        const kw = normalizeText(card.dataset.keywords || '');
+        const titleEl = card.querySelector('.acc-title');
+        const descEl = card.querySelector('.acc-desc');
+        const bodyEl = card.querySelector('.acc-body');
+        const title = normalizeText(titleEl ? titleEl.textContent : '');
+        const desc = normalizeText(descEl ? descEl.textContent : '');
+        const body = normalizeText(bodyEl ? bodyEl.textContent : '');
+        const match = kw.includes(q) || title.includes(q) || desc.includes(q) || body.includes(q);
+        card.classList.toggle('hidden-card', !match);
+        if (match) {
+          anyVisible = true;
+          card.classList.add('open');
+        }
+      });
 
-    noResults.style.display = anyVisible ? 'none' : 'block';
-  });
+      allSections.forEach(section => {
+        const visCards = section.querySelectorAll('.acc-card:not(.hidden-card)');
+        if (section.querySelectorAll('.acc-card').length > 0) {
+          section.style.display = visCards.length === 0 ? 'none' : '';
+        }
+      });
+
+      if (noResults) noResults.style.display = anyVisible ? 'none' : 'block';
+    });
+  }
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const navWrap = document.querySelector('.nav-tabs-wrap');
